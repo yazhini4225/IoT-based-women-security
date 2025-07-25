@@ -1,0 +1,66 @@
+#include <ESP8266WiFi.h>
+#include <FirebaseESP8266.h>
+
+// Your Wi-Fi credentials
+//#define WIFI_SSID "SAFETY"
+//#define WIFI_PASSWORD "0123456789"
+#define WIFI_SSID "VIGNESH"
+#define WIFI_PASSWORD "bsnl@9442667857"
+// Firebase project credentials
+#define FIREBASE_HOST "https://tbot-5fe6a-default-rtdb.firebaseio.com/"
+#define FIREBASE_AUTH "iartGm6zTU0BaKx0L4VTJb6zGdHSdz6ESrV5vB7t"
+
+int led = 2;           // LED pin
+int button = 5;       // Button pin
+bool ledState = LOW;   // Tracks the LED state
+int buttonState=0;
+int counter=0;
+
+// Firebase configuration objects
+FirebaseConfig config;
+FirebaseAuth auth;
+FirebaseData firebaseData;
+
+bool data_sent = false; // Flag to track data sent state
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(led, OUTPUT);           // Set LED as output
+  pinMode(button, INPUT_PULLUP);  // Set button with internal pull-up
+
+  // Connect to Wi-Fi
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to Wi-Fi...");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.print("Connected to Wi-Fi, IP address: ");
+  Serial.println(WiFi.localIP());
+
+  // Set up Firebase configuration
+  config.host = FIREBASE_HOST;
+  config.signer.tokens.legacy_token = FIREBASE_AUTH;
+  // Initialize Firebase connection
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
+  Serial.println("Connected to Firebase.");
+}
+
+void loop() {
+  int buttonState=digitalRead(button);
+  Serial.println(buttonState);
+  Serial.println("COUNTER:"+String(counter));
+  delay(1000);
+  if (buttonState==0){
+    counter+=1;
+    }
+      if (Firebase.setInt(firebaseData, "/safety/", counter)) {
+        Serial.println("Data written successfully.");
+        data_sent = true;
+      } else {
+        Serial.println("Failed to write data.");
+        Serial.println(firebaseData.errorReason());
+      }
+    }
